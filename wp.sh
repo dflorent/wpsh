@@ -2,7 +2,12 @@
 
 if ! which curl >/dev/null; then
     echo "I require curl but it's not installed. Aborting..."
-    exit 1
+    exit
+fi
+
+if ! which mysql >/dev/null; then
+    echo "I require mysql but it's not installed. Aborting..."
+    exit
 fi
 
 # wordpress download
@@ -17,35 +22,72 @@ rm readme.html
 
 # uploads dir permissions
 mkdir wp-content/uploads
-chmod 777 wp-content/uploads
+chmod -R 777 wp-content/uploads
 
 # wp-config
+echo 'Do you want create wp-config (y/n)?'
+read -e awser
+if [ "$awser" == y ] ; then
+    cp wp-config-sample.php wp-config.php
+    
+    echo 'Database name?'
+    read -e dbname
+    sed -i '' 's/votre_nom_de_bdd/'$dbname'/g' wp-config.php
+    
+    echo 'Database user?'
+    read -e dbuser
+    sed -i '' 's/votre_utilisateur_de_bdd/'$dbuser'/g' wp-config.php
+    
+    echo 'Database password?'
+    read -s dbpass
+    sed -i '' 's/votre_mdp_de_bdd/'$dbpass'/g' wp-config.php
+    
+    echo 'Table prefix?'
+    read -e prefix
+    sed -i '' 's/wp_/'$prefix'/g' wp-config.php
+    
+    # todo...
+    # dowload and insert salt string inside wp-config.php
+fi
 
-# todo...
-# copy wp-confip-sample.php into wp-config.php
-# dowload and insert salt string inside wp-config.php
-# database name ?
-# replace database name
-# database user ?
-# replace database user
-# database password ?
-# replace database password
+# database
+echo 'Do you want create the database (y/n)?'
+read -e awser
+if [ "$awser" == y ] ; then
+    mysql -u $dbuser -p -e "CREATE DATABASE IF NOT EXISTS "$dbname";"
+fi
 
-# theme creation
+# theme
+echo 'Do you want create a theme (y/n)?'
+read -e awser
+if [ "$awser" == y ] ; then
+    echo 'Do you want remove default themes (y/n)?'
+    read -e awser
+    if [ "$awser" == y ] ; then
+        rm -rf wp-content/themes/*
+    fi
+    echo 'Theme name?'
+    read -e theme_name
+    echo 'Theme description?'
+    read -e theme_description
+    echo 'Theme version?'
+    read -e theme_version
+    echo 'Theme author?'
+    read -e theme_author
+    echo 'Theme author uri?'
+    read -e theme_author_uri
+    mkdir wp-content/themes/$theme_name
+    touch wp-content/themes/$theme_name/index.php
+    touch wp-content/themes/$theme_name/functions.php
+    touch wp-content/themes/$theme_name/style.css
+    echo "/*!
+ * Theme Name: $theme_name
+ * Description: $theme_description
+ * Version: $theme_version
+ * Author: $theme_author
+ * Author URI: $theme_author_uri
+ */" >> wp-content/themes/$theme_name/style.css
+    curl -o wp-content/themes/$theme_name/screenshot.png http://fakeimg.pl/600x450/?text=$theme_name 
+fi
 
-# todo...
-# do you want create a theme ?
-# do you want remove default themes ?
-# theme name ?
-# description ?
-# version ?
-# author ?
-# author URI ?
-rm -rf wp-content/themes/*
-mkdir wp-content/themes/mytheme
-touch wp-content/themes/mytheme/index.php
-touch wp-content/themes/mytheme/functions.php
-touch wp-content/themes/mytheme/style.css
-curl -o wp-content/themes/mytheme/screenshot.png http://fakeimg.pl/600x450?text=mytheme
-
-echo "Done. You're ready!"
+echo "Done."
