@@ -8,8 +8,8 @@ Usage
 
 ```
 git clone https://github.com/dflorent/wpsh.git
-mkdir ~/.wpsh && cp wp.sh ~/.wpsh/wp.sh
-echo "alias wpsh='sh -c ~/.wpsh/wp.sh' >> ~/.bashrc
+mv wpsh ~/.wpsh
+echo "alias wpsh='sh -c ~/.wpsh/wp.sh'" >> ~/.bashrc
 chmod a+x ~/.wpsh/wp.sh
 cd /path/to/your/project
 wpsh
